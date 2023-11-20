@@ -6,6 +6,7 @@ import {
   MinLength,
   Matches,
   IsString,
+  IsOptional,
   // IsStrongPassword,
 } from 'class-validator';
 import { Match } from '../decorators/match.decorator';
@@ -35,7 +36,8 @@ export class SignUpUserDto {
   passwordConfirm: string;
 
   @ApiProperty({ description: 'role', example: 'user' })
-  @IsNotEmpty()
+  // @IsNotEmpty()
+  @IsOptional()
   @IsString()
   role: string;
 }

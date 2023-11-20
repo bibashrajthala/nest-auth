@@ -7,18 +7,18 @@ import {
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../users/user.entity';
+import { User } from '../users/entities/user.entity';
 import { SignUpUserDto } from './dtos/signUp.dto';
 import { createHash } from 'crypto';
 import { Response as ResponseType } from 'express';
-import { EmailService } from './email.service';
+import { EmailVerificationService } from '../mails/email-verification/email-verification.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private emailService: EmailService,
+    private emailVerificationService: EmailVerificationService,
   ) {}
 
   // sign up
@@ -38,9 +38,12 @@ export class AuthService {
     // return await this.usersService.create(newUser);
     const registeredUser = await this.usersService.create(newUser);
 
-    await this.emailService.sendVerificationLink({
-      email: registeredUser?.email,
-    });
+    const emailsentResponse =
+      await this.emailVerificationService.sendVerificationLink({
+        email: registeredUser?.email,
+      });
+
+    console.log('emailresponse', emailsentResponse);
 
     return registeredUser;
   }

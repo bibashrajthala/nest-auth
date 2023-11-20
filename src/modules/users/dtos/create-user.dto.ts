@@ -5,9 +5,11 @@ import {
   MinLength,
   Matches,
   IsString,
+  IsOptional,
   // IsStrongPassword,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { EmailVerificationToken } from 'src/modules/mails/email-verification/entities/emailVerificationToken.entity';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'email', example: 'testuser@gmail.com' })
@@ -29,4 +31,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   role: string;
+
+  // @IsOptional()
+  // emailVerificationToken?: EmailVerificationToken;
 }

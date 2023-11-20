@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EmailVerificationToken } from 'src/modules/mails/email-verification/entities/emailVerificationToken.entity';
 import {
   PrimaryGeneratedColumn,
   Column,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  AfterInsert,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity({ name: 'users' })
@@ -28,7 +32,7 @@ export class User {
   })
   password: string;
 
-  @ApiProperty({ description: 'role', example: 'user' })
+  @ApiPropertyOptional({ description: 'role', example: 'user' })
   @Column({
     nullable: false,
     default: 'user',
@@ -87,11 +91,6 @@ export class User {
     default: null,
   })
   refreshToken: string;
-  @Column({
-    nullable: true,
-    default: null,
-  })
-  emailVerificationToken: string;
 
   @ApiProperty({ description: 'createdAt', example: '2023-07-06T09:34' })
   // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -106,4 +105,13 @@ export class User {
   // })
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToOne(
+    () => EmailVerificationToken,
+    (EmailVerificationToken) => EmailVerificationToken.user,
+    {
+      cascade: true, // when a user is created, cascade it as well ie create a row linked with that user in this table
+    },
+  )
+  emailVerificationToken: EmailVerificationToken;
 }

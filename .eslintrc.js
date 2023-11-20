@@ -23,5 +23,23 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     'no-unused-vars': [1, { args: 'after-used', argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/naming-convention': [
+      'error',
+      {
+        selector: 'property',
+        modifiers: ['private'],
+        format: ['camelCase'],
+        leadingUnderscore: 'allow',
+      },
+      {
+        selector: 'property',
+        modifiers: ['public', 'static'],
+        format: ['camelCase'],
+        custom: {
+          regex: '^this\\.',
+          match: true,
+        },
+      },
+    ],
   },
 };

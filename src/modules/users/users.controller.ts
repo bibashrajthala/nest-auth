@@ -7,6 +7,7 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Query,
 } from '@nestjs/common';
@@ -16,7 +17,7 @@ import { Serialize } from '../../interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { IApiResponse } from 'src/types/api.types';
-import { User } from './user.entity';
+import { User } from './entities/user.entity';
 
 @ApiTags('Users')
 @ApiBearerAuth('jwtAuth')
@@ -62,7 +63,9 @@ export class UsersController {
   @ApiOkResponse({ description: 'Gives user using id', type: UserDto })
   @HttpCode(HttpStatus.OK)
   @Get('/:id')
-  async findUserById(@Param('id') id: string): Promise<IApiResponse<User>> {
+  async findUserById(
+    @Param('id', ParseIntPipe) id: string,
+  ): Promise<IApiResponse<User>> {
     // console.log('Request Handler is running');
     const user = await this.userService.findOne(parseInt(id));
     if (!user) {

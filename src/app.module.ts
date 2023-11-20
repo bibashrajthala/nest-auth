@@ -3,22 +3,26 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { LoggerModule } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwtAuthentication.guard';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 //
 import { dataSource } from './database/data-source';
 
-import smtpConfig from './config/smtp.config';
-import { MailerModule } from '@nestjs-modules/mailer';
+// config
 import typeormConfig from './config/orm.config';
 import pinoLoggerConfig from './config/pinoLogger.config';
 import configOptions from './config/config';
 import throttlerConfig from './config/rateLimit.config';
+import smtpConfig from './config/smtp.config';
+
+// business modules
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { EmailVerificationModule } from './modules/mails/email-verification/email-verification.module';
 
 @Module({
   imports: [
@@ -45,8 +49,10 @@ import throttlerConfig from './config/rateLimit.config';
     // Nodemailer for SMTP
     MailerModule.forRoot(smtpConfig),
 
+    // Business modules
     UsersModule,
     AuthModule,
+    EmailVerificationModule,
   ],
   controllers: [AppController],
   providers: [

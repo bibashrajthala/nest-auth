@@ -37,7 +37,7 @@ import {
   CurrentUserId,
 } from '../users/decorators/currentUser.decorator';
 import { IApiResponse } from 'src/types/api.types';
-import { User } from '../users/user.entity';
+import { User } from '../users/entities/user.entity';
 import { RefreshAuthGuard } from 'src/guards/refreshAuthentication.guard';
 import { IRefreshJwtPayload } from './strategies/refreshTokens.strategy';
 import { Public } from './decorators/public.decorator';
