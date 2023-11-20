@@ -1,0 +1,336 @@
+NEST JS SETUP
+
+**** create new nest project first looking at documentation
+>>nest new project-name
+
+>> ******
+yarn = npm install = pnpm install
+yarn add <package> = npm i <package> =  pnpm add <package>
+yarn add -D <package>  = npm i --save-dev <package> = pnpm add -D <package> = pnpm add --save-dev <package>
+npx = pnpm dlx
+*********
+
+>> pnpm run start:dev
+=> start dev server(in local host) to check if its running fine
+
+***********
+///// Create .nvmrc file in root directory inside of project
+add:
+v18 
+=> this suggest team to use node of version 18 and higher.
+or particular version like:
+18.14.0
+
+////// Create .npmrc file in root directory inside of project
+add:
+engine-strict=true
+=> this locks our engine we use (such as yarn, npm ,pnpm) to strict.
+
+in package.json file: add engines as:
+{
+  "name": "gets-you-job",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node":">=18.0.0",
+    "yarn":"please-use-pnpm",
+    "npm":"please-use-pnpm",
+     "pnpm":">=7.27.0"
+  },
+  "scripts": {
+  
+  },
+
+////// ESLINt and Prettier are pre installed while creating nest project.Lets add some manual configuations to auto created configurations:
+
+/// in .eslintrc.js file, you can add rules as:
+module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: 'tsconfig.json',
+    tsconfigRootDir: __dirname,
+    sourceType: 'module',
+  },
+  plugins: ['@typescript-eslint/eslint-plugin'],
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
+  ],
+  root: true,
+  env: {
+    node: true,
+    jest: true,
+  },
+  ignorePatterns: ['.eslintrc.js'],
+  rules: {
+    '@typescript-eslint/interface-name-prefix': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-unused-vars': [1, { args: 'after-used', argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': 'warn',
+  },
+};
+
+
+****
+
+=> "rules": {
+    "no-unused-vars": [1, { "args": "after-used", "argsIgnorePattern": "^_" }]
+  } => this is where we define rules:
+1=> for warning
+2=> for error
+0=> for ignoring
+
+or, instead of 0,1,2 , you can use:
+"warn"=> for warning
+"error"=> for error
+"off"=> for ignoring
+
+=> in root dir: add file : .prettierrc
+
+in that file add:
+{
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": true
+}
+
+=> in root dir: add file : .prettierignore
+
+in that file add:
+
+////////////////////////// GIT HOOKS
+
+Husky is a tool for running scripts at different stages of the git process, for example add, commit, push, etc
+
+
+1. install husky and (install and run it in your project)
+>> yarn add -D husky
+=> will see husky in package.json inside dev dependencies.
+
+>> npx husky install
+(for pnpm, >> pnpm dlx husky install )
+=> this will create .husky dir in root of project.
+
+=> in package.json
+
+ ...
+  "scripts: {
+    ...
+    "prepare": "husky install"
+  }
+
+=> this prepare cmd will auto run whenever anyone will use yarn or npm install ie husky and the git hooks gets auto instlled and implemented.
+.yarn
+.next
+dist
+node_modules
+=> tells prettier to ignore formatting these files and folders
+
+2. Add git hooks 
+// for precommit hook:(use npx)
+>> npx husky add .husky/pre-commit pnpm tsc --noEmit && pnpm lint && pnpm format
+=>Run the tsc command to make sure there are no TypeScript errors
+Run the eslint command to make sure there are no ESLint errors
+Format our code using prettier
+
+OR even better, use lint-staged:
+
+>> pnpm add -D lint-staged
+
+>> npx husky add .husky/pre-commit npx lint-staged
+
+///// in .lintstagedrc.json file: //add
+{
+  "*.{js,jsx,ts,tsx,scss,css}": ["eslint", "prettier --write"]
+}
+ 
+// this tells to run the eslint and prettier format when lint-staged is run
+
+
+=>
+=> you can add other commands and rules inside pre-commit if you want.
+
+similarly,
+>> npx husky add .husky/pre-push pnpm build
+=> check and run pnpm build before pushing
+
+////////////////////////////////// setting up mysql database
+ 
+
+// before installing mysql , you may want to delete mysql folder from :C/Program Data, because this is where all previous configuration(password) of mysql is installed 
+so if you want to set new password delete it first before installing, but you can leave it if you dont want to change prev password
+
+the current password set is root
+
+
+// install mysql 
+=> dont select developer's default while installing it , select custom/manual install then only select and only install(mysql server, workbench and shell if you want to interact with mysql through shell)
+=> take help of youtube for installing these 3 only while installing mysql if necessary 
+
+after installing it create a database instance connection with a connectionName(database name).
+
+if it shows connection failed with local host then:
+=>goto program files /mysql/ server/bin then copy path 
+=> open cmd prompt as administrator
+=> cd PasteThePathCopied
+=> mysqld --install
+=> mysqld --initialize
+then go to start of windows => then go to services => select mysql => start service 
+=> then go to workbench and  check conneciton => this will solve the conneciton with localhost.
+
+//////// setting up typeorm for connecting mysql with nest js
+inside app module add Typeorm config as: 
+
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'root',
+      database: 'nest_template',
+      entities: [],
+      synchronize: true,
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+
+/// now if you do
+=> pnpm start:dev
+=> this will give error as we are trying to connect to db that dont exist so lets create one so that it can be connected.
+
+// in terminal
+=> mysql -u root -p
+=> Enter password:root
+// this will take you to mysql shell:
+// now in mysql terminal do:
+
+=>create database nest_template;
+// this will create new empty database, use db name same as in Typeorm config you made, also dont use -, you can use underscore
+// also dont forget semicolon(;)
+
+=>use nest_template;
+=>show tables;
+//this will show empty set, as it dont have any tables in db.
+
+
+// lets create a users table now:
+// now do:
+=> nest g module users
+=> nest g controller users
+=> nest g service users
+=> nest g users/user.entity
+=> this will create users module, service , controller and user.entity(change this folder name to entity), then in user entity add table columns as: 
+
+ import { PrimaryGeneratedColumn, Column, Entity } from 'typeorm';
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    name: 'email_address',
+    nullable: false,
+    default: '',
+  })
+  emailAddress: string;
+
+  @Column({
+    nullable: false,
+    default: '',
+  })
+  password: string;
+
+  @Column({
+    nullable: true,
+    default: '',
+  })
+  name: string;
+
+  @Column({
+    name: 'is_active',
+    nullable: false,
+    default: true,
+  })
+  isActive: boolean;
+}
+
+//******* dont forget to include this entity to config ***//
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'root',
+      database: 'nest_template',
+      entities: [User],
+      synchronize: true,
+    }),
+
+
+here name for emailAddress will replace js camelcase name to mysql naming convention:'email_address',
+nullable=> false means it cant be null 
+default is used to give default value to column
+
+//// 
+=> now do
+=> pnpm start:dev
+
+in mysql shell :
+=>show tables;
+// this time this will show user table in db
+
+=> describe user;
+// this will describe give user table
+// you will see field name, type(of field), null(yes if its nullable, no if it is not), key(eg: PRI for primary key), default(this will five default value used, eg for is_active it will show 1 for true)
+
+=> now since synchronize in true in typeorm config we set, whenever we make change to table it will directly take effects in corresponding table.
+
+=> so we may loose data in production, so never use synchronize/:true in production, rather use migrations
+
+
+//////////// GOOGlE OAUTH SYNCED WITH JWT
+
+
+// goto google console developer: https://console.cloud.google.com/
+// go to OAUTH consent screen
+// create project
+// select external
+// fill form, give app-name, your email, you can leave other fields empty
+// continue to click save and continue till end.
+
+// go to credentials
+// create credentials // select oauth client id
+// select app type web app
+// give app name
+// give authorized origin your backend server starting url: http://localhost:5000
+// give callback url: http://localhost:5000/api/auth/google/callback
+// in scope  select email and profile, we are only going to use these two in our nest auth google strategy
+this is the url your app will get directed to(ie this api will get called) after your google sign in ie when you sign in suceed or fail
+// in test user, include your google emails you will use to test the google authentication
+ 
+// then you will get client public id, secret save then in you .env file.
+
+
+////////////////////////////////
+Email SETUP
+////////////////////////////
+
+consider these docs: 
+1: https://miracleio.me/snippets/use-gmail-with-nodemailer/
+2: https://nest-modules.github.io/mailer/

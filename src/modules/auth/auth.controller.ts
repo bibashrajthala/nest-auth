@@ -175,6 +175,7 @@ export class AuthController {
     return response;
   }
 
+  // google sign in
   @Public() // override global jwt guard first, otherwise it will give error for expired accessToken
   @HttpCode(HttpStatus.OK)
   @Get('/google/signin')
@@ -182,6 +183,7 @@ export class AuthController {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async auth() {}
 
+  // google sign in
   @Public() // override global jwt guard first, otherwise it will give error for expired accessToken
   @HttpCode(HttpStatus.OK)
   @Get('/google/callback') // shuold be same as redirect url set in google dev console (here, http://localhost:5000/api/auth/google/redirect)

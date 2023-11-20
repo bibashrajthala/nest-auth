@@ -35,7 +35,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       // name: `${name.givenName} ${name.familyName}`,
       firstName: given_name,
       lastName: family_name,
-      picture: picture,
+      profilePicture: picture,
 
       role: 'user',
     };

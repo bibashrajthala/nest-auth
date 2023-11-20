@@ -12,9 +12,9 @@
     "pnpm": ">=7.27.0"
   },
   "scripts": {
-    "build": "cross-env NODE_ENV=production nest build",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "cross-env NODE_ENV=production nest start",
+    "start": "nest start",
     "start:dev": "cross-env NODE_OPTIONS='--inspect' cross-env NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production npm run migration && node dist/main",
@@ -50,7 +50,6 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "compression": "^1.7.4",
-    "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
     "handlebars": "^4.7.7",
     "helmet": "^7.0.0",

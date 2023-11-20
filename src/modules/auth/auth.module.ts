@@ -11,6 +11,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshTokens.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { EmailService } from './email.service';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
     GoogleStrategy,
     JwtStrategy,
     RefreshTokenStrategy,
+    EmailService,
   ],
   exports: [AuthService],
 })

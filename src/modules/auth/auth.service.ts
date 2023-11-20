@@ -11,12 +11,14 @@ import { User } from '../users/user.entity';
 import { SignUpUserDto } from './dtos/signUp.dto';
 import { createHash } from 'crypto';
 import { Response as ResponseType } from 'express';
+import { EmailService } from './email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   // sign up
@@ -33,7 +35,14 @@ export class AuthService {
     const { passwordConfirm, ...rest } = signUpUserDto;
     const newUser = { ...rest, password: hashedPassword };
 
-    return await this.usersService.create(newUser);
+    // return await this.usersService.create(newUser);
+    const registeredUser = await this.usersService.create(newUser);
+
+    await this.emailService.sendVerificationLink({
+      email: registeredUser?.email,
+    });
+
+    return registeredUser;
   }
 
   // sign in

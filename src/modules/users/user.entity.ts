@@ -7,8 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity()
-@Entity()
+@Entity({ name: 'users' })
 export class User {
   @ApiProperty({ description: 'id', example: 1 })
   @PrimaryGeneratedColumn()
@@ -17,6 +16,7 @@ export class User {
   @ApiProperty({ description: 'email', example: 'test@gmail.com' })
   @Column({
     // name: 'email_address',
+    unique: true,
     nullable: false,
     default: '',
   })
@@ -87,6 +87,11 @@ export class User {
     default: null,
   })
   refreshToken: string;
+  @Column({
+    nullable: true,
+    default: null,
+  })
+  emailVerificationToken: string;
 
   @ApiProperty({ description: 'createdAt', example: '2023-07-06T09:34' })
   // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
