@@ -14,6 +14,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { IApiResponse } from 'src/types/api.types';
 import { EmailVerificationService } from './email-verification.service';
+import { EmailVerificationDto } from './dtos/emailVerification.dto';
 
 @ApiTags('Email verification')
 @Controller('email-verification')
@@ -34,11 +35,9 @@ export class EmailVerificationController {
       token,
     );
 
-    console.log('email', email);
-
     if (!email) throw new BadRequestException('Invalid token');
 
-    await this.emailVerificationService.confirmEmail(email);
+    await this.emailVerificationService.confirmEmail(email, token);
 
     const response = {
       success: true,
@@ -46,10 +45,4 @@ export class EmailVerificationController {
     };
     return response;
   }
-
-  //   @Post('resend')
-  //   @UseGuards(JwtAuthenticationGuard)
-  //   async resendConfirmationLink(@Req() request: RequestWithUser) {
-  //     await this.emailConfirmationService.resendConfirmationLink(request.user.id);
-  //   }
 }

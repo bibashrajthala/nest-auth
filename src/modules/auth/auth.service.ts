@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
@@ -38,18 +39,38 @@ export class AuthService {
     // return await this.usersService.create(newUser);
     const registeredUser = await this.usersService.create(newUser);
 
-    const emailsentResponse =
-      await this.emailVerificationService.sendVerificationLink({
-        email: registeredUser?.email,
-      });
+    await this.emailVerificationService.sendVerificationLink({
+      email: registeredUser?.email,
+    });
 
-    console.log('emailresponse', emailsentResponse);
+    // return registeredUser;
+    const response = {
+      success: true,
+      message:
+        'Verification Link has been sent to your email.Please verify your email through it',
+    };
 
-    return registeredUser;
+    return response;
   }
 
   // sign in
   async signInLocal(user: Partial<User>): Promise<ITokens> {
+    const registeredUser = await this.usersService.findOneByEmail(user?.email);
+
+    if (!registeredUser)
+      throw new NotFoundException('This email is not registered yet!');
+
+    // send verification link if user's email is not verified
+    if (registeredUser && !registeredUser?.isVerified) {
+      await this.emailVerificationService.sendVerificationLink({
+        email: registeredUser?.email,
+      });
+
+      throw new BadRequestException(
+        'Email not verified. Verification Link has been sent to your email.Please verify your email through it',
+      );
+    }
+
     const payload = { sub: user?.id, email: user?.email, role: user?.role };
 
     const tokens = await this.getTokens(payload); // get accessToken and refreshToken

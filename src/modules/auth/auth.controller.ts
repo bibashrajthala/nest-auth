@@ -62,7 +62,8 @@ export class AuthController {
   @Post('/signup')
   async signUpLocal(
     @Body() signUpUserDto: SignUpUserDto,
-  ): Promise<IApiResponse<User>> {
+  ): Promise<IApiResponse<any>> {
+    // ): Promise<IApiResponse<User>> {
     const data = await this.authService.signUpLocal(signUpUserDto);
 
     const response = {

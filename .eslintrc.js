@@ -21,6 +21,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    'no-console': 'warn',
     'no-unused-vars': [1, { args: 'after-used', argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/naming-convention': [
