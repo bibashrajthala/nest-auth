@@ -258,10 +258,12 @@ export class AuthController {
 
     if (!isValid) throw new ForbiddenException('Invalid OTP');
 
+    // update user password
     await this.usersService.update(user?.id, {
       password: resetPasswordDto?.password,
     });
 
+    // reset otp for user
     await this.otpService.update(user?.otp?.id, {
       secret: null,
       type: null,
