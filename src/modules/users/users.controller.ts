@@ -94,7 +94,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @Patch('/:id')
   async updateUser(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: string,
     @Body() body: UpdateUserDto,
   ): Promise<IApiResponse<User>> {
     const user = await this.userService.update(parseInt(id), body);
@@ -111,7 +111,9 @@ export class UsersController {
   @ApiOkResponse({ description: 'Delete user with centain id', type: UserDto })
   @HttpCode(HttpStatus.OK)
   @Delete('/:id')
-  async removeUser(@Param('id') id: string): Promise<IApiResponse<User>> {
+  async removeUser(
+    @Param('id', ParseIntPipe) id: string,
+  ): Promise<IApiResponse<User>> {
     const user = await this.userService.remove(parseInt(id));
 
     const response = {

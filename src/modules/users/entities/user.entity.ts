@@ -1,15 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EmailVerificationToken } from 'src/modules/mails/email-verification/entities/emailVerificationToken.entity';
+
 import {
   PrimaryGeneratedColumn,
   Column,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
-  AfterInsert,
   OneToOne,
-  JoinColumn,
 } from 'typeorm';
+
+import { EmailVerification } from '../../mails/email-verification/entities/emailVerification.entity';
+import { Otp } from '../../otp/entities/otp.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -107,11 +108,16 @@ export class User {
   updatedAt: Date;
 
   @OneToOne(
-    () => EmailVerificationToken,
-    (EmailVerificationToken) => EmailVerificationToken.user,
+    () => EmailVerification,
+    (EmailVerification) => EmailVerification.user,
     {
       cascade: true, // when a user is created, cascade it as well ie create a row linked with that user in this table
     },
   )
-  emailVerificationToken: EmailVerificationToken;
+  emailVerification: EmailVerification;
+
+  @OneToOne(() => Otp, (Otp) => Otp.user, {
+    cascade: true, // when a user is created, cascade it as well ie create a row linked with that user in this table
+  })
+  otp: Otp;
 }

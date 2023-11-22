@@ -23,6 +23,7 @@ import smtpConfig from './config/smtp.config';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmailVerificationModule } from './modules/mails/email-verification/email-verification.module';
+import { OtpModule } from './modules/otp/otp.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { EmailVerificationModule } from './modules/mails/email-verification/emai
     UsersModule,
     AuthModule,
     EmailVerificationModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [

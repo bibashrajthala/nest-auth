@@ -1,20 +1,15 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  Post,
-  Query,
 } from '@nestjs/common';
-import { EmailVerificationToken } from './entities/emailVerificationToken.entity';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { IApiResponse } from 'src/types/api.types';
 import { EmailVerificationService } from './email-verification.service';
-import { EmailVerificationDto } from './dtos/emailVerification.dto';
 
 @ApiTags('Email verification')
 @Controller('email-verification')
@@ -30,7 +25,7 @@ export class EmailVerificationController {
   @Get('/confirm/:token')
   async confirmEmailVerification(
     @Param('token') token: string,
-  ): Promise<IApiResponse<any>> {
+  ): Promise<IApiResponse<never>> {
     const email = await this.emailVerificationService.decodeConfirmationToken(
       token,
     );

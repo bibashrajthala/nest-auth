@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,7 +11,7 @@ import { EmailVerificationDto } from './dtos/emailVerification.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EmailVerificationToken } from './entities/emailVerificationToken.entity';
+import { EmailVerification } from './entities/emailVerification.entity';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -22,8 +21,8 @@ export class EmailVerificationService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private mailService: MailerService,
-    @InjectRepository(EmailVerificationToken)
-    private emailVerificationTokenRepository: Repository<EmailVerificationToken>,
+    @InjectRepository(EmailVerification)
+    private emailVerificationRepository: Repository<EmailVerification>,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -38,7 +37,7 @@ export class EmailVerificationService {
       throw new NotFoundException('User not found!');
     }
 
-    const userAndToken = await this.emailVerificationTokenRepository.findOne({
+    const userAndToken = await this.emailVerificationRepository.findOne({
       where: { user },
     });
 
@@ -47,7 +46,7 @@ export class EmailVerificationService {
     }
 
     Object.assign(userAndToken, attrs); // using attrs update verificationToken
-    return this.emailVerificationTokenRepository.save(userAndToken);
+    return this.emailVerificationRepository.save(userAndToken);
   }
 
   /// utils
@@ -61,7 +60,7 @@ export class EmailVerificationService {
     );
 
     if (!user)
-      throw new ForbiddenException('Email is not registered! Please sign up');
+      throw new NotFoundException('Email is not registered! Please sign up');
 
     // generate verification token
     const token = await this.getEmailVerificationToken({
@@ -92,7 +91,7 @@ export class EmailVerificationService {
         this.hashEmailVerificationToken(token);
 
       // save the newly generated hashed token in db
-      await this.emailVerificationTokenRepository.update(
+      await this.emailVerificationRepository.update(
         { user: { id: user?.id } },
         {
           emailVerificationToken: hashedEmailVerificationToken,
@@ -127,20 +126,20 @@ export class EmailVerificationService {
   public async confirmEmail(email: string, token: string) {
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['emailVerificationToken'],
+      relations: ['emailVerification'],
     });
 
     if (user?.isVerified) {
       throw new BadRequestException('Email is already verified');
     }
 
-    if (!user || !user?.emailVerificationToken)
+    if (!user || !user?.emailVerification)
       throw new BadRequestException('Invalid Token');
 
     // check verificationToken provided matches with hased verificationToken stored in db
     const isMatch = this.compareEmailVerificationTokens(
       token,
-      user?.emailVerificationToken?.emailVerificationToken,
+      user?.emailVerification?.emailVerificationToken,
     );
 
     if (!isMatch) throw new BadRequestException('Invalid Token');
@@ -149,7 +148,7 @@ export class EmailVerificationService {
 
     // mark users email as verified
     await this.usersService.update(user?.id, { isVerified: true });
-    await this.emailVerificationTokenRepository.update(
+    await this.emailVerificationRepository.update(
       { user: { id: user?.id } },
       { emailVerificationToken: null },
     );

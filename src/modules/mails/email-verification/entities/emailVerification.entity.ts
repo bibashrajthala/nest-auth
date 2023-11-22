@@ -6,17 +6,16 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity({ name: 'email_verification_tokens' })
-export class EmailVerificationToken {
+@Entity({ name: 'email_verification' })
+export class EmailVerification {
   @PrimaryGeneratedColumn() // Use PrimaryGeneratedColumn instead of PrimaryColumn
   id: number;
 
-  @OneToOne(() => User, (user) => user.emailVerificationToken, {
-    onDelete: 'CASCADE',
+  @OneToOne(() => User, (user) => user.emailVerification, {
+    onDelete: 'CASCADE', // so that it gets deleted when its parent(ie user) is deleted
   })
   @JoinColumn()
   user: User;

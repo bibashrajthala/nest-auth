@@ -13,27 +13,35 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshTokens.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailVerificationService } from '../mails/email-verification/email-verification.service';
-import { EmailVerificationToken } from '../mails/email-verification/entities/emailVerificationToken.entity';
+import { EmailVerification } from '../mails/email-verification/entities/emailVerification.entity';
+import { OtpModule } from '../otp/otp.module';
+import { OtpService } from '../otp/otp.service';
+import { Otp } from '../otp/entities/otp.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, EmailVerificationToken]),
-    UsersModule,
+    TypeOrmModule.forFeature([User, EmailVerification, Otp]),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '7d' }, // default expiration time, if expiresIn is not mentioned in jwt.sign()
     }),
+
+    UsersModule,
+    OtpModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    UsersService,
-    EmailVerificationService,
+
     LocalStrategy,
     GoogleStrategy,
     JwtStrategy,
     RefreshTokenStrategy,
+
+    UsersService,
+    EmailVerificationService,
+    OtpService,
   ],
   exports: [AuthService],
 })

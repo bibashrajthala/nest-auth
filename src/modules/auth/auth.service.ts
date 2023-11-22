@@ -36,14 +36,13 @@ export class AuthService {
     const { passwordConfirm, ...rest } = signUpUserDto;
     const newUser = { ...rest, password: hashedPassword };
 
-    // return await this.usersService.create(newUser);
     const registeredUser = await this.usersService.create(newUser);
+    // return registeredUser;
 
     await this.emailVerificationService.sendVerificationLink({
       email: registeredUser?.email,
     });
 
-    // return registeredUser;
     const response = {
       success: true,
       message:

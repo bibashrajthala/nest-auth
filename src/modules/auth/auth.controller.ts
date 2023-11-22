@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -11,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService, IAccessToken, IJwtPayload } from './auth.service';
-import { UsersService } from '../users/users.service';
 import { SignUpUserDto } from './dtos/signUp.dto';
 import { SignInUserDto } from './dtos/signIn.dto';
 import { LocalAuthGuard } from 'src/guards/localAuthentication.guard';
@@ -37,18 +37,22 @@ import {
   CurrentUserId,
 } from '../users/decorators/currentUser.decorator';
 import { IApiResponse } from 'src/types/api.types';
-import { User } from '../users/entities/user.entity';
 import { RefreshAuthGuard } from 'src/guards/refreshAuthentication.guard';
 import { IRefreshJwtPayload } from './strategies/refreshTokens.strategy';
 import { Public } from './decorators/public.decorator';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { OtpService } from '../otp/otp.service';
+import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
+import { ResetPasswordDto } from './dtos/resetPassword.dto';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
-    private userService: UsersService,
     private authService: AuthService,
+    private usersService: UsersService,
+    private otpService: OtpService,
   ) {}
 
   // sign up
@@ -62,15 +66,15 @@ export class AuthController {
   @Post('/signup')
   async signUpLocal(
     @Body() signUpUserDto: SignUpUserDto,
-  ): Promise<IApiResponse<any>> {
+  ): Promise<IApiResponse<never>> {
     // ): Promise<IApiResponse<User>> {
-    const data = await this.authService.signUpLocal(signUpUserDto);
+    const response = await this.authService.signUpLocal(signUpUserDto);
 
-    const response = {
-      success: true,
-      message: 'Successfully Registered User!',
-      data,
-    };
+    // const response = {
+    //   success: true,
+    //   message: 'Successfully Registered User!',
+    //   data,
+    // };
     return response;
   }
 
@@ -134,7 +138,7 @@ export class AuthController {
   @Get('/signout')
   async signout(
     @CurrentUserId() userid: number,
-    @Response({ passthrough: true }) res: ExpressResponse,
+    @Response({ passthrough: true }) res: ExpressResponse, // pass http only cookie with response
   ): Promise<IApiResponse<never>> {
     res.cookie('refreshToken', '', {
       expires: new Date(0),
@@ -206,6 +210,68 @@ export class AuthController {
         accessToken: tokens?.accessToken, // send accessToken with response
       },
     };
+    return response;
+  }
+
+  // forget password
+  @ApiOkResponse({
+    description: 'Succesfully sent otp to your email!',
+  })
+  @ApiBody({
+    description: 'Provide you email',
+    type: ForgotPasswordDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  @Public()
+  @Post('/forgot-password')
+  async forgetPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<IApiResponse<never>> {
+    const response = await this.otpService.sendOtpMail(forgotPasswordDto);
+
+    return response;
+  }
+
+  // reset password
+  @ApiOkResponse({
+    description: 'Succesfully changed your password',
+  })
+  @ApiBody({
+    description: 'reset password',
+    type: ResetPasswordDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  @Public()
+  @Post('/reset-password')
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<IApiResponse<never>> {
+    const user = await this.usersService.findOneByEmail(
+      resetPasswordDto?.email,
+    );
+    if (!user || !user?.otp) throw new BadRequestException('Invalid OTP');
+
+    const isValid = await this.otpService.verifyOtp(
+      user?.otp?.id,
+      resetPasswordDto?.otpCode,
+    );
+
+    if (!isValid) throw new ForbiddenException('Invalid OTP');
+
+    await this.usersService.update(user?.id, {
+      password: resetPasswordDto?.password,
+    });
+
+    await this.otpService.update(user?.otp?.id, {
+      secret: null,
+      type: null,
+    });
+
+    const response = {
+      success: true,
+      message: 'Successfully changed password',
+    };
+
     return response;
   }
 }
