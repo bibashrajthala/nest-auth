@@ -30,6 +30,9 @@ export class Otp {
   })
   type: OtpType | null;
 
+  @Column({ type: 'timestamp', nullable: true, default: null })
+  expiresAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

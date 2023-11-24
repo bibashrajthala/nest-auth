@@ -13,6 +13,11 @@ import { SignUpUserDto } from './dtos/signUp.dto';
 import { createHash } from 'crypto';
 import { Response as ResponseType } from 'express';
 import { EmailVerificationService } from '../mails/email-verification/email-verification.service';
+import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
+import { OtpService } from '../otp/otp.service';
+import { ResetPasswordDto } from './dtos/resetPassword.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +25,10 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private emailVerificationService: EmailVerificationService,
+    private otpService: OtpService,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   // sign up
@@ -30,8 +39,7 @@ export class AuthService {
       throw new BadRequestException('Email already exists!');
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(signUpUserDto?.password, salt);
+    const hashedPassword = await this.hashPassword(signUpUserDto?.password);
 
     const { passwordConfirm, ...rest } = signUpUserDto;
     const newUser = { ...rest, password: hashedPassword };
@@ -123,6 +131,41 @@ export class AuthService {
     return this.signInLocal(userExists);
   }
 
+  async forgetPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const response = await this.otpService.sendOtpMail(forgotPasswordDto);
+    return response;
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: resetPasswordDto?.email },
+      relations: ['otp'],
+    });
+
+    if (!user || !user?.otp) throw new BadRequestException('Invalid OTP');
+
+    const isValid = await this.otpService.verifyOtp(
+      user?.otp?.id,
+      resetPasswordDto?.otpCode,
+    );
+
+    if (!isValid) throw new ForbiddenException('Invalid OTP');
+
+    const hashedPassword = await this.hashPassword(resetPasswordDto?.password);
+
+    // update user password
+    await this.usersService.update(user?.id, {
+      password: hashedPassword,
+    });
+
+    // reset otp for user
+    await this.otpService.update(user?.otp?.id, {
+      secret: null,
+      type: null,
+      expiresAt: null,
+    });
+  }
+
   // utilities
 
   async validateUser(email: string, password: string): Promise<Partial<User>> {
@@ -183,6 +226,12 @@ export class AuthService {
   compareRefreshTokens(userToken: string, storedToken: string): boolean {
     const hashedUserToken = this.hashRefreshToken(userToken);
     return hashedUserToken === storedToken;
+  }
+
+  async hashPassword(password: string) {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+    return hashedPassword;
   }
 }
 

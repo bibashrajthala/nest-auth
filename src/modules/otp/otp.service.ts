@@ -2,17 +2,16 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { authenticator } from 'otplib';
 import { Otp } from './entities/otp.entity';
 import { CreateOtpDto } from './dto/create-otp.dto';
 import { OtpType } from './types/otp.types';
-import { User } from '../users/entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class OtpService {
@@ -22,16 +21,13 @@ export class OtpService {
 
     @InjectRepository(Otp)
     private otpRepository: Repository<Otp>,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
   ) {}
-
-  /// utils
 
   async update(otpId: number, attrs: IUpdateAttribures) {
     return await this.otpRepository.update({ id: otpId }, attrs);
   }
+
+  /// utils
 
   // send mail with otp
   async sendOtpMail(sendOtpDto: CreateOtpDto) {
@@ -40,10 +36,14 @@ export class OtpService {
     if (!user)
       throw new ForbiddenException('Email is not registered! Please sign up');
 
-    const secret = authenticator.generateSecret();
+    const currentDate = new Date();
+    const expirationDuration = 2; // 2minutes
+    const expiryDate = new Date(
+      currentDate.getTime() + expirationDuration * 60000,
+    ); // Add milliseconds for expiration duration
 
     // generate otp code
-    const code = this.generateOtp(secret);
+    const { code, secret } = await this.generateOtp();
 
     try {
       // if email is sent successfully
@@ -69,43 +69,53 @@ export class OtpService {
         {
           secret,
           type: sendOtpDto?.type,
+          expiresAt: expiryDate,
         },
       );
 
       return {
         success: true,
-        message: 'Sent Otp to provided email Successfully',
       };
     } catch (error) {
       throw new BadRequestException('Could not send otp to the provided email');
     }
   }
 
-  generateOtp(secret: string) {
-    const otpCode = authenticator.generate(secret);
+  async generateOtp() {
+    const otpCode = crypto.randomInt(100000, 999999)?.toString();
 
-    const isValid = authenticator.check(otpCode, secret);
+    const hashedOtpCode = await this.hashOtpCode(otpCode);
 
-    if (!isValid)
-      throw new InternalServerErrorException(
-        'Unable to provide otp at the moment',
-      );
-    return otpCode;
+    return { code: otpCode, secret: hashedOtpCode };
+  }
+
+  async hashOtpCode(code: string) {
+    const salt = await bcrypt.genSalt();
+    const hashedCode = await bcrypt.hash(code, salt);
+    return hashedCode;
   }
 
   // vefify Otp
   async verifyOtp(otpId: number, code: string) {
-    // if (authenticator.timeRemaining() <= 0) {
-    // }
-
-    const otp = await this.otpRepository.findOneBy({ id: otpId });
-
-    if (!otp) throw new BadRequestException('Invalid OTP');
-
-    const isVerified = authenticator.verify({
-      token: code,
-      secret: otp?.secret,
+    const otp = await this.otpRepository.findOne({
+      where: { id: otpId },
+      relations: ['user'],
     });
+
+    if (!otp || !otp?.secret || !otp?.expiresAt)
+      throw new BadRequestException('Invalid OTP');
+
+    if (new Date(otp?.expiresAt)?.getTime() < Date.now()) {
+      // // reset otp for user
+      // await this.update(otp?.user?.id, {
+      //   secret: null,
+      //   type: null,
+      //   expiresAt: null,
+      // });
+      throw new BadRequestException('This OTP has been expired');
+    }
+
+    const isVerified = await bcrypt.compare(code, otp?.secret);
 
     return isVerified;
   }
@@ -115,4 +125,5 @@ export class OtpService {
 interface IUpdateAttribures {
   secret: string | null;
   type: OtpType | null;
+  expiresAt: Date | null;
 }

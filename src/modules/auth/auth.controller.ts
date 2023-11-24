@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Request,
   Response,
@@ -41,7 +42,6 @@ import { RefreshAuthGuard } from 'src/guards/refreshAuthentication.guard';
 import { IRefreshJwtPayload } from './strategies/refreshTokens.strategy';
 import { Public } from './decorators/public.decorator';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
-import { OtpService } from '../otp/otp.service';
 import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
 import { ResetPasswordDto } from './dtos/resetPassword.dto';
 import { UsersService } from '../users/users.service';
@@ -52,7 +52,6 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
-    private otpService: OtpService,
   ) {}
 
   // sign up
@@ -227,9 +226,14 @@ export class AuthController {
   async forgetPassword(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<IApiResponse<never>> {
-    const response = await this.otpService.sendOtpMail(forgotPasswordDto);
+    const res = await this.authService.forgetPassword(forgotPasswordDto);
 
-    return response;
+    const response = {
+      success: res?.success,
+      message: 'Sent Otp to provided email Successfully',
+    };
+
+    if (res?.success) return response;
   }
 
   // reset password
@@ -242,38 +246,16 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   @Public()
-  @Post('/reset-password')
+  @Patch('/reset-password')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<IApiResponse<never>> {
-    const user = await this.usersService.findOneByEmail(
-      resetPasswordDto?.email,
-    );
-    if (!user || !user?.otp) throw new BadRequestException('Invalid OTP');
-
-    const isValid = await this.otpService.verifyOtp(
-      user?.otp?.id,
-      resetPasswordDto?.otpCode,
-    );
-
-    if (!isValid) throw new ForbiddenException('Invalid OTP');
-
-    // update user password
-    await this.usersService.update(user?.id, {
-      password: resetPasswordDto?.password,
-    });
-
-    // reset otp for user
-    await this.otpService.update(user?.otp?.id, {
-      secret: null,
-      type: null,
-    });
+    await this.authService.resetPassword(resetPasswordDto);
 
     const response = {
       success: true,
       message: 'Successfully changed password',
     };
-
     return response;
   }
 }
