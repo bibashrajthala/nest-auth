@@ -7,10 +7,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 import { EmailVerification } from '../../mails/email-verification/entities/emailVerification.entity';
 import { Otp } from '../../otp/entities/otp.entity';
+import { Provider } from '../types/user.types';
+import { Profile } from 'src/modules/profile/entities/profile.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -48,40 +51,12 @@ export class User {
   })
   isActive: boolean;
 
-  @ApiProperty({ description: 'firstName', example: 'firstName' })
-  @Column({
-    nullable: false,
-    default: '',
-  })
-  firstName: string;
-
-  @ApiPropertyOptional({ description: 'middleName', example: '' })
-  @Column({
-    nullable: false,
-    default: '',
-  })
-  middleName: string;
-
-  @ApiProperty({ description: 'lastName', example: 'lastName' })
-  @Column({
-    nullable: false,
-    default: '',
-  })
-  lastName: string;
-
-  @ApiPropertyOptional({ description: 'profilePicture', example: null })
-  @Column({
-    nullable: true,
-    default: null,
-  })
-  profilePicture: string;
-
   @ApiPropertyOptional({ description: 'isVerified', example: true })
   @Column({
     nullable: false,
     default: false,
   })
-  isVerified: boolean;
+  isVerified: boolean; // email verification
 
   @ApiPropertyOptional({
     description: 'refreshToken',
@@ -93,17 +68,20 @@ export class User {
   })
   refreshToken: string;
 
+  @ApiProperty({ description: 'provider', example: 'google' })
+  @Column({
+    type: 'enum',
+    enum: Provider,
+    nullable: false,
+    default: Provider?.NORMAL,
+  })
+  provider: Provider;
+
   @ApiProperty({ description: 'createdAt', example: '2023-07-06T09:34' })
-  // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   @CreateDateColumn()
   createdAt: Date;
 
   @ApiProperty({ description: 'updatedAt', example: '2023-07-06T09:34' })
-  // @Column({
-  //   type: 'timestamp',
-  //   default: () => 'CURRENT_TIMESTAMP',
-  //   onUpdate: 'CURRENT_TIMESTAMP',
-  // })
   @UpdateDateColumn()
   updatedAt: Date;
 
@@ -120,4 +98,10 @@ export class User {
     cascade: true, // when a user is created, cascade it as well ie create a row linked with that user in this table
   })
   otp: Otp;
+
+  @OneToOne(() => Profile, (profile) => profile.user, {
+    cascade: true, // when a user is created, cascade it as well ie create a profile row in profile table linked with this user
+  })
+  @JoinColumn()
+  profile: Profile;
 }

@@ -45,6 +45,7 @@ import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
 import { ResetPasswordDto } from './dtos/resetPassword.dto';
 import { UsersService } from '../users/users.service';
+import { CreateUserDto } from '../users/dtos/create-user.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -196,7 +197,9 @@ export class AuthController {
     @Request() req: ExpressRequest,
     @Response({ passthrough: true }) res: ExpressResponse, // pass http only cookie with response
   ): Promise<IApiResponse<IAccessToken>> {
-    const tokens = await this.authService.signInGoogle(req?.user);
+    const tokens = await this.authService.signInGoogle(
+      req?.user as CreateUserDto,
+    );
 
     if (!tokens) throw new ForbiddenException('Access Denied!');
 

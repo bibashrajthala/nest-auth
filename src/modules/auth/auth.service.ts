@@ -18,6 +18,7 @@ import { OtpService } from '../otp/otp.service';
 import { ResetPasswordDto } from './dtos/resetPassword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreateUserDto } from '../users/dtos/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -114,7 +115,7 @@ export class AuthService {
     return tokens;
   }
 
-  async signInGoogle(user) {
+  async signInGoogle(user: CreateUserDto) {
     if (!user) {
       throw new BadRequestException('Unauthenticated');
     }
@@ -124,7 +125,10 @@ export class AuthService {
     // if user dont exist , register user to database first
     if (!userExists) {
       // const newUserRegistered = await this.signUpLocal(user);
-      const newUserRegistered = await this.usersService.create(user);
+      const newUserRegistered = await this.usersService.create({
+        ...user,
+        isVerified: true, // google account is already verified by google
+      });
       return this.signInLocal(newUserRegistered);
     }
 

@@ -5,6 +5,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailVerification } from '../mails/email-verification/entities/emailVerification.entity';
 import { Otp } from '../otp/entities/otp.entity';
+import { Profile } from '../profile/entities/profile.entity';
 
 @Injectable()
 export class UsersService {
@@ -18,12 +19,22 @@ export class UsersService {
 
     user.email = userDto.email;
     user.password = userDto?.password;
+    user.provider = userDto?.provider;
+    user.isVerified = userDto?.isVerified ?? false;
 
     const emailVerification = new EmailVerification();
     user.emailVerification = emailVerification;
 
     const otp = new Otp();
     user.otp = otp;
+
+    const profile = new Profile();
+    profile.firstName = userDto?.firstName;
+    profile.middleName = userDto?.middleName;
+    profile.lastName = userDto?.lastName;
+    profile.profilePicture = userDto?.profilePicture ?? null;
+
+    user.profile = profile;
 
     const saved = this.userRepository.save(user);
 

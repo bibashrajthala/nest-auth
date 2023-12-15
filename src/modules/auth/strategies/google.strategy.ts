@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Strategy, VerifyCallback } from 'passport-google-oauth2';
+import { Provider } from 'src/modules/users/types/user.types';
+import { CreateUserDto } from 'src/modules/users/dtos/create-user.dto';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -23,19 +25,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     _refreshToken: string,
     profile: any,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): Promise<void> {
     const { id, given_name, family_name, emails, picture } = profile;
 
     // console.log(profile);
 
     const user = {
-      provider: 'google',
+      provider: Provider?.GOOGLE,
       providerId: id,
       email: emails[0].value,
       // name: `${name.givenName} ${name.familyName}`,
       firstName: given_name,
       lastName: family_name,
-      profilePicture: picture,
+      profilePicture: picture ?? null,
 
       role: 'user',
     };

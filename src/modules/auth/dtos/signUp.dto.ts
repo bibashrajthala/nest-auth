@@ -9,9 +9,31 @@ import {
   // IsStrongPassword,
 } from 'class-validator';
 import { Match } from '../decorators/match.decorator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SignUpUserDto {
+  @ApiProperty({ description: 'firstName', example: 'test' })
+  @IsNotEmpty()
+  @IsString()
+  firstName: string;
+
+  @ApiProperty({ description: 'middleName', example: '' })
+  @IsString()
+  middleName: string;
+
+  @ApiProperty({ description: 'lastName', example: 'user' })
+  @IsNotEmpty()
+  @IsString()
+  lastName: string;
+
+  @ApiPropertyOptional({
+    description: 'profilePicture',
+    example: 'https://profilepicture.png',
+  })
+  @IsOptional()
+  @IsString()
+  profilePicture: string;
+
   @ApiProperty({ description: 'email', example: 'testuser@gmail.com' })
   @IsNotEmpty()
   @IsEmail()
@@ -35,7 +57,6 @@ export class SignUpUserDto {
   passwordConfirm: string;
 
   @ApiProperty({ description: 'role', example: 'user' })
-  // @IsNotEmpty()
   @IsOptional()
   @IsString()
   role: string;

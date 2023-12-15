@@ -56,7 +56,7 @@ export class OtpService {
           template: 'forgotPassword',
           context: {
             data: {
-              name: user?.firstName, // only include this if name is entered while signing up, otherwise it will be empty(here it will be empty).
+              name: user?.profile?.firstName, // only include this if name is entered while signing up, otherwise it will be empty(here it will be empty).
               code,
             },
           },
