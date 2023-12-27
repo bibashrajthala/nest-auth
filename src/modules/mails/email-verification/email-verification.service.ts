@@ -38,7 +38,7 @@ export class EmailVerificationService {
     }
 
     const userAndToken = await this.emailVerificationRepository.findOne({
-      where: { user },
+      where: { user: { id: userId } },
     });
 
     if (!userAndToken) {

@@ -1,19 +1,9 @@
-import { User } from 'src/modules/users/entities/user.entity';
-import {
-  Column,
-  Entity,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseEntity } from '../../../../models/BaseEntity';
+import { User } from '../../../users/entities/user.entity';
+import { Column, Entity, OneToOne, JoinColumn } from 'typeorm';
 
 @Entity({ name: 'email_verification' })
-export class EmailVerification {
-  @PrimaryGeneratedColumn() // Use PrimaryGeneratedColumn instead of PrimaryColumn
-  id: number;
-
+export class EmailVerification extends BaseEntity {
   @OneToOne(() => User, (user) => user.emailVerification, {
     onDelete: 'CASCADE', // so that it gets deleted when its parent(ie user) is deleted
   })
@@ -25,10 +15,4 @@ export class EmailVerification {
     default: null,
   })
   emailVerificationToken: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

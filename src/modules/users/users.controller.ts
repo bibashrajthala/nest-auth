@@ -16,8 +16,9 @@ import { UsersService } from './users.service';
 import { Serialize } from '../../interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { IApiResponse } from 'src/types/api.types';
+import { IApiResponse, IPaginationResponse } from '../../types/api.types';
 import { User } from './entities/user.entity';
+import { ListUsersQueryDto } from './dtos/list-user.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth('jwtAuth')
@@ -29,12 +30,15 @@ export class UsersController {
   @ApiOkResponse({ description: 'Gives list of users', type: UserDto })
   @HttpCode(HttpStatus.OK)
   @Get('/users')
-  async listAllUsers(): Promise<IApiResponse<User[]>> {
-    const users = await this.userService.find();
+  async listAllUsers(
+    @Query() query: ListUsersQueryDto,
+  ): Promise<IPaginationResponse<User[]>> {
+    const [users, total] = await this.userService.find(query);
     const response = {
       success: true,
       message: 'Fetched list of users successfully',
       data: users,
+      pagination: { total },
     };
 
     return response;

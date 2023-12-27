@@ -1,23 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import {
-  PrimaryGeneratedColumn,
-  Column,
-  Entity,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 
 import { Gender } from '../../users/types/user.types';
 import { User } from '../../users/entities/user.entity';
+import { BaseEntity } from '../../../models/BaseEntity';
 
 @Entity({ name: 'profiles' })
-export class Profile {
-  @ApiProperty({ description: 'id', example: 1 })
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Profile extends BaseEntity {
   @ApiProperty({ description: 'firstName', example: 'firstName' })
   @Column({
     nullable: false,
@@ -54,14 +44,6 @@ export class Profile {
     default: null,
   })
   gender: Gender;
-
-  @ApiProperty({ description: 'createdAt', example: '2023-07-06T09:34' })
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @ApiProperty({ description: 'updatedAt', example: '2023-07-06T09:34' })
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @OneToOne(() => User, (user) => user.profile)
   user: User;

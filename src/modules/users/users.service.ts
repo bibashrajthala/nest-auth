@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmailVerification } from '../mails/email-verification/entities/emailVerification.entity';
 import { Otp } from '../otp/entities/otp.entity';
 import { Profile } from '../profile/entities/profile.entity';
+import { ListUsersQueryDto } from './dtos/list-user.dto';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { DEFAULT_LIMIT } from 'src/constants/defaultQueryValues';
 
 @Injectable()
 export class UsersService {
@@ -44,10 +46,36 @@ export class UsersService {
   }
 
   //
-  async find() {
-    const users = await this.userRepository.find();
+  async find(query?: ListUsersQueryDto): Promise<[User[], number]> {
+    const take = query?.limit ?? DEFAULT_LIMIT;
+    const skip = query?.offset ?? 0;
 
-    return users;
+    let filterOptions: FindOptionsWhere<User> | FindOptionsWhere<User>[] = {};
+
+    // search
+    if (query.search) {
+      const searchParams = query.search.trim();
+      filterOptions = [{ email: ILike(`%${searchParams}%`) }];
+    }
+    // and filter
+
+    // sort
+    const orderOptions: Record<string, string> = {};
+    if (query?.orderBy) {
+      orderOptions[query.orderBy] = query?.sort ?? 'DESC';
+    }
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where: filterOptions,
+      take,
+      skip,
+      order: orderOptions,
+      relations: {
+        profile: true,
+      },
+    });
+
+    return [users, total];
   }
 
   //

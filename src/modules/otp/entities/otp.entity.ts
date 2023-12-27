@@ -1,22 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { OtpType } from '../types/otp.types';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
+import { BaseEntity } from '../../../models/BaseEntity';
 
 @Entity({ name: 'otps' })
-export class Otp {
-  @ApiProperty({ description: 'id', example: 1 })
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Otp extends BaseEntity {
   @ApiProperty({ description: 'secret', example: 'secret43asfsdf' })
   @Column({ nullable: true, default: null })
   secret: string;
@@ -32,12 +21,6 @@ export class Otp {
 
   @Column({ type: 'timestamp', nullable: true, default: null })
   expiresAt: Date;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @OneToOne(() => User, (user) => user.otp, {
     onDelete: 'CASCADE', // so that it gets deleted when its parent(ie user) is deleted

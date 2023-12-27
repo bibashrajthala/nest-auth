@@ -1,26 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import {
-  PrimaryGeneratedColumn,
-  Column,
-  Entity,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Column, Entity, OneToOne, JoinColumn } from 'typeorm';
 
 import { EmailVerification } from '../../mails/email-verification/entities/emailVerification.entity';
 import { Otp } from '../../otp/entities/otp.entity';
 import { Provider } from '../types/user.types';
-import { Profile } from 'src/modules/profile/entities/profile.entity';
+import { Profile } from '../../profile/entities/profile.entity';
+import { BaseEntity } from '../../../models/BaseEntity';
 
 @Entity({ name: 'users' })
-export class User {
-  @ApiProperty({ description: 'id', example: 1 })
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class User extends BaseEntity {
   @ApiProperty({ description: 'email', example: 'test@gmail.com' })
   @Column({
     // name: 'email_address',
@@ -76,14 +65,6 @@ export class User {
     default: Provider?.NORMAL,
   })
   provider: Provider;
-
-  @ApiProperty({ description: 'createdAt', example: '2023-07-06T09:34' })
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @ApiProperty({ description: 'updatedAt', example: '2023-07-06T09:34' })
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @OneToOne(
     () => EmailVerification,
